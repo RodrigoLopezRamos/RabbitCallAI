@@ -32,8 +32,6 @@ import java.util.*;
 @ApplicationScoped
 public class UserService {
 
-
-
     /**
      *
      */
