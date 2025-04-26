@@ -26,7 +26,7 @@ import java.util.Set;
 
 @ApplicationPath("/rs")
 @ApplicationScoped
-public class    AnaliaApplication extends Application {
+public class   AnaliaApplication extends Application {
 
     @Override
     public Set<Class<?>> getClasses() {

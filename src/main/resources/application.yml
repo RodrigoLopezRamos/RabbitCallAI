@@ -1,0 +1,71 @@
+quarkus:
+  package:
+    type: uber-jar  # Creates a single JAR containing all dependencies
+
+  datasource:
+    db-kind: mariadb  # Specifies MariaDB as the database type
+    username: root    # Database username
+    password: toor    # Database password
+    jdbc:
+      url: jdbc:mariadb://127.0.0.1:3306/analia  # Connection URL to the MariaDB database
+      driver: org.mariadb.jdbc.Driver            # JDBC driver class for MariaDB
+
+  http:
+    root-path: /aa    # Sets the base path for all HTTP endpoints
+    http2: false      # Disables HTTP/2 protocol
+    port: 8080        # Server port
+    host: 0.0.0.0     # Binds to all network interfaces
+    cors:
+      ~: true         # Enables CORS (Cross-Origin Resource Sharing)
+      origins: http://localhost:8080,http://localhost:8080/quinoa  # Allow the Quinoa frontend
+      headers: accept, authorization, content-type, x-requested-with, code, uuid, latitude, longitude, token, userTypeCode, userAgent, nonce, vendorCode, useragent  # Added useragent header
+      methods: GET, OPTIONS, POST, DELETE, PUT, PATCH  # Removed duplicate DELETE
+      access-control-allow-credentials: true  # Allow credentials in CORS requests
+      access-control-max-age: 86400  # Cache preflight requests for 24 hours
+
+  # MCP Server Configuration
+  mcp-server:
+    stdio:
+      enabled: true   # Enable stdio transport for use with MCP hosts
+    sse:
+      enabled: true   # Enable Server-Sent Events transport
+      path: /mcp/messages  # Endpoint for SSE transport
+    metadata:
+      name: quarkus-mcp-vapi-connector
+      version: 1.0.0
+
+  # REST Client for VAPI API integration
+  rest-client:
+    vapi-api:
+      url: https://api.vapi.ai  # VAPI API base URL
+      scope: jakarta.inject.Singleton
+      connect-timeout: 5000     # Connection timeout in milliseconds
+      read-timeout: 30000       # Read timeout in milliseconds
+
+  # Logging configuration
+  log:
+    file:
+      enable: true
+      path: vapi-connector.log  # Log to file since stdout/stderr used for MCP
+    category:
+      "org.acme":
+        level: DEBUG
+      "io.quarkiverse.mcp":
+        level: DEBUG
+
+  # Quinoa configuration
+  quinoa:
+    package-manager-install:
+      node-version: 20.10.0
+    ui-root-path: quinoa
+    build-dir: dist
+
+# VAPI configuration
+vapi:
+  api-key: ${VAPI_API_KEY:your-default-api-key}  # API key for VAPI, preferably from environment variable
+  assistant-id: ${VAPI_ASSISTANT_ID:your-default-assistant-id}  # Default assistant ID for VAPI
+
+  # Outbound calling configuration
+  calling:
+    default-phone-number: ${VAPI_PHONE_NUMBER:your-default-phone-number}
+    webhook-url: "${VAPI_WEBHOOK_URL:http://your-domain.com/aa/webhook/vapi}"

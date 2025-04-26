@@ -129,7 +129,7 @@
     </form>
     <div class="mt-6 flex items-center justify-between text-xs text-gray-400">
       <span>Not a member?</span>
-      <a href="#signup" class="text-blue-300 hover:underline">Sign up</a>
+      <a href="#rabbitcall_signup_page" class="text-blue-300 hover:underline">Sign up</a>
     </div>
   </div>
 </div>
@@ -292,6 +292,150 @@
     event.preventDefault();
     alert('Login successful! (This is a demo.)');
     closeModalFn();
+  });
+
+  /**
+   * Function to register a device with the server
+   * Calls the /device/register.c endpoint with required headers
+   * @param {string} uuid - Unique device identifier
+   * @param {string} userAgent - Browser/device user agent string
+   * @returns {Promise} - Promise resolving to the registration response
+   */
+  function registerDevice(uuid, userAgent) {
+    // Define API endpoint
+    const apiUrl = '/aa/rs/device/register.c';
+
+    // Create headers required by the endpoint
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'uuid': uuid,
+      'userAgent': userAgent
+    });
+
+    // Configure the request
+    const requestOptions = {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({}), // Empty JSON body as the data is in headers
+    };
+
+    // Return the fetch promise
+    return fetch(apiUrl, requestOptions)
+      .then(response => {
+        // Store the nonce for future use (it's in the response header)
+        const nonce = response.headers.get('nonce');
+        if (nonce) {
+          // Save nonce to localStorage or session for future requests
+          localStorage.setItem('deviceNonce', nonce);
+        }
+
+        // Check if response is successful
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        // Parse and return the JSON response
+        return response.json();
+      })
+      .then(data => {
+        console.log('Device registered successfully:', data);
+        // Store deviceId from the response
+        if (data.deviceId) {
+          localStorage.setItem('deviceId', data.deviceId);
+        }
+        return data;
+      })
+      .catch(error => {
+        console.error('Error registering device:', error);
+        throw error;
+      });
+  }
+
+  /**
+   * Function to generate a UUID v4
+   * @returns {string} UUID v4 string
+   */
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  /**
+   * Function to check if device is alive
+   * @returns {Promise} Promise resolving to the alive status
+   */
+  function checkDeviceAlive() {
+    return fetch('/aa/rs/device/alive', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return true; // If response is ok, device is alive
+    })
+    .catch(error => {
+      console.error('Error checking device alive status:', error);
+      return false;
+    });
+  }
+
+  /**
+   * Function to initialize device registration
+   * Checks if a UUID exists in localStorage, generates one if not,
+   * then registers the device with the server
+   * @returns {Promise} Promise resolving to the registration response
+   */
+  function initializeDevice() {
+    // Check if UUID exists in localStorage
+    let uuid = localStorage.getItem('deviceUuid');
+
+    // If no UUID exists, generate one and store it
+    if (!uuid) {
+      uuid = generateUUID();
+      localStorage.setItem('deviceUuid', uuid);
+      console.log('Generated new device UUID:', uuid);
+    }
+
+    // Get user agent
+    const userAgent = navigator.userAgent;
+
+    // Register the device
+    return registerDevice(uuid, userAgent)
+      .then(data => {
+        console.log('Device initialized successfully');
+        return data;
+      })
+      .catch(error => {
+        console.error('Failed to initialize device:', error);
+        throw error;
+      });
+  }
+
+  // Execute device initialization when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    // First check if device is alive
+    checkDeviceAlive()
+      .then(isAlive => {
+        if (!isAlive) {
+          // If device isn't alive, initialize it
+          return initializeDevice();
+        }
+        // Device is alive, no need to reinitialize
+        console.log('Device is already active');
+        return null;
+      })
+      .catch(error => {
+        console.error('Error during device initialization:', error);
+      });
   });
 </script>
 </body>
