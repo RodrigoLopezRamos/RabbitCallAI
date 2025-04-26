@@ -32,8 +32,7 @@ import java.util.*;
 @ApplicationScoped
 public class UserService {
 
-    public static final String ACCOUNT_SID = "AC7cc65293e1c0b9ffdaf3f6b4401c0b78";
-    public static final String AUTH_TOKEN = "bafeaf795c14ef8004b2dc78bbc3d741";
+
 
     /**
      *
@@ -62,7 +61,7 @@ public class UserService {
 
     @PostConstruct
     public void initTwilio() {
-        Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
+  //      Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
     }
 
     /**
